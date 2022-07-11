@@ -40,6 +40,28 @@ public class TicketDAO {
         }
     }
 
+    public int getCustomerNumberOfUse(String vehicleRegNumber)
+    {
+    	int result = 0;
+    	Connection con = null;
+    	try {
+            con = dataBaseConfig.getConnection();
+            PreparedStatement ps = con.prepareStatement(DBConstants.GET_TICKETS);
+            //ID, PARKING_NUMBER, VEHICLE_REG_NUMBER, PRICE, IN_TIME, OUT_TIME)
+            ps.setString(1,vehicleRegNumber);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()) {
+            	result++;
+            }
+            return result;
+    	}catch (Exception ex){
+    		logger.error("Error fetching next available slot",ex);
+    	}finally {
+    		dataBaseConfig.closeConnection(con);
+        	return result;
+    	}
+    }
+    
     public Ticket getTicket(String vehicleRegNumber) {
         Connection con = null;
         Ticket ticket = null;
