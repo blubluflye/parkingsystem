@@ -1,5 +1,6 @@
 package com.parkit.parkingsystem.integration;
 
+import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.dao.ParkingSpotDAO;
 import com.parkit.parkingsystem.dao.TicketDAO;
@@ -73,14 +74,14 @@ public class ParkingDataBaseIT {
         ticket.setParkingSpot(parkingSpot);
         fareCalculatorService.calculateFare(ticket);
         ticket.setParkingSpot(parkingSpot);
-        ticket.setVehicleRegNumber("ABCDEFG");
+        ticket.setVehicleRegNumber("ABCDEF");
         if(ticketDAO.saveTicket(ticket)) {
         	assert(!parkingSpot.isAvailable());
         }
         else
         {
         	//get ticket from DB
-        	Ticket ticketFromDB = ticketDAO.getTicket("ABCDEFG");
+        	Ticket ticketFromDB = ticketDAO.getTicket("ABCDEF");
         	//reduce the range from milliseconds to min because DB round them to second then compare the two ticket
         	assert(ticket.getInTime().getTime()/60000 == ticketFromDB.getInTime().getTime()/60000);
         	// use getNextAvailableSlot from parkingSpotDAO to check if parkingSpot has been updated in DB
@@ -94,11 +95,11 @@ public class ParkingDataBaseIT {
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         parkingService.processExitingVehicle();
         //TODO: check that the fare generated and out time are populated correctly in the database
-        Ticket ticket = ticketDAO.getTicket("ABCDEFG");
+        Ticket ticket = ticketDAO.getTicket("ABCDEF");
         double priceFromDB = ticket.getPrice();
         FareCalculatorService fareCalculatorService = new FareCalculatorService();
         fareCalculatorService.calculateFare(ticket);
-        assert(ticket.getPrice() == priceFromDB);
+        assert((int)ticket.getPrice()*100 ==(int) priceFromDB*100);
     }
 
 	@Test
@@ -115,7 +116,7 @@ public class ParkingDataBaseIT {
 	        ticket.setParkingSpot(parkingSpot);
 	        fareCalculatorService.calculateFare(ticket);
 	        ticket.setParkingSpot(parkingSpot);
-	        ticket.setVehicleRegNumber("ABCDEFG");
+	        ticket.setVehicleRegNumber("ABCDEF");
 	        if(ticketDAO.saveTicket(ticket)) {
 	        	assert(!parkingSpot.isAvailable());
 	        }
@@ -142,5 +143,51 @@ public class ParkingDataBaseIT {
 	    assert(!welcomeMessage.contains("Welcome back! As a recurring user of our parking lot, you'll benefit from a 5% discount."));
 	    System.setOut(originalOut);
 	        
+	}
+	
+	@Test
+	public void checkThe5percecentReduceForFidelity() {
+		 ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+	        parkingService.processIncomingVehicle();
+	        // check if a ticket that is saved in DB and Parking table is updated with availability
+	        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);       
+	        Date inTime = new Date();
+	        inTime.setTime( System.currentTimeMillis() - (  63 * 60 * 1000) );
+	        Date outTime = new Date();
+	        ticket.setInTime(inTime);
+	        ticket.setOutTime(outTime);
+	        ticket.setParkingSpot(parkingSpot);
+	        fareCalculatorService.calculateFare(ticket);
+	        ticket.setParkingSpot(parkingSpot);
+	        ticket.setVehicleRegNumber("ABCDEF");
+	        if(ticketDAO.saveTicket(ticket)) {
+	        	assert(!parkingSpot.isAvailable());
+	        }
+	        else
+	        {
+	        	parkingService.processExitingVehicle();
+	        	parkingService.processIncomingVehicle();
+	        	Date inTime2 = new Date();
+		        inTime.setTime( System.currentTimeMillis() - (  60 * 60 * 1000) );
+		        Date outTime2 = new Date();
+		        ticket.setInTime(inTime2);
+		        ticket.setOutTime(outTime2);
+		        ticket.setParkingSpot(parkingSpot);
+		        fareCalculatorService.calculateFare(ticket);
+		        ticket.setParkingSpot(parkingSpot);
+		        ticket.setVehicleRegNumber("ABCDEF");
+	        	parkingService.processExitingVehicle();
+	        	if(ticketDAO.saveTicket(ticket)) {
+		        	assert(!parkingSpot.isAvailable());
+		        }
+		        else
+		        {
+		        	Ticket ticket = ticketDAO.getTicket("ABCDEF");
+		            double priceFromDB = ticket.getPrice();
+		            FareCalculatorService fareCalculatorService = new FareCalculatorService();
+		            fareCalculatorService.calculateFare(ticket);
+		            assert(((int)(ticket.getPrice()*100) == (int) (priceFromDB*100)) && ((int) (priceFromDB * 100) == (int)(0.95 * Fare.CAR_RATE_PER_HOUR  )));
+		        }
+	        }
 	}
 }
