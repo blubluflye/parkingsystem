@@ -19,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Date;
 
 @ExtendWith(MockitoExtension.class)
@@ -99,4 +101,33 @@ public class ParkingDataBaseIT {
         assert(ticket.getPrice() == priceFromDB);
     }
 
+	@Test
+	public void welcomeBack() {
+		 ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+	        parkingService.processIncomingVehicle();
+	        // check if a ticket that is saved in DB and Parking table is updated with availability
+	        ParkingSpot parkingSpot = new ParkingSpot(1, ParkingType.CAR,false);       
+	        Date inTime = new Date();
+	        inTime.setTime( System.currentTimeMillis() - (  63 * 60 * 1000) );
+	        Date outTime = new Date();
+	        ticket.setInTime(inTime);
+	        ticket.setOutTime(outTime);
+	        ticket.setParkingSpot(parkingSpot);
+	        fareCalculatorService.calculateFare(ticket);
+	        ticket.setParkingSpot(parkingSpot);
+	        ticket.setVehicleRegNumber("ABCDEFG");
+	        if(ticketDAO.saveTicket(ticket)) {
+	        	assert(!parkingSpot.isAvailable());
+	        }
+	        else
+	        {
+	        	final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+	        	final PrintStream originalOut = System.out;
+	        	System.setOut(new PrintStream(outContent));
+	        	parkingService.processIncomingVehicle();
+	        	String welcomeMessage = outContent.toString();
+	        	assert(welcomeMessage.contains("Welcome back!"));
+	        	System.setOut(originalOut);
+	        }
+	}
 }
