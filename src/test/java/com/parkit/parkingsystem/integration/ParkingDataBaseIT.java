@@ -126,7 +126,7 @@ public class ParkingDataBaseIT {
 	        	System.setOut(new PrintStream(outContent));
 	        	parkingService.processIncomingVehicle();
 	        	String welcomeMessage = outContent.toString();
-	        	assert(welcomeMessage.contains("Welcome back!"));
+	        	assert(welcomeMessage.contains("Welcome back! As a recurring user of our parking lot, you'll benefit from a 5% discount."));
 	        	System.setOut(originalOut);
 	        }
 	}
@@ -139,7 +139,7 @@ public class ParkingDataBaseIT {
 	    System.setOut(new PrintStream(outContent));
 	    parkingService.processIncomingVehicle();
 	    String welcomeMessage = outContent.toString();
-	    assert(!welcomeMessage.contains("Welcome back!"));
+	    assert(!welcomeMessage.contains("Welcome back! As a recurring user of our parking lot, you'll benefit from a 5% discount."));
 	    System.setOut(originalOut);
 	        
 	}
