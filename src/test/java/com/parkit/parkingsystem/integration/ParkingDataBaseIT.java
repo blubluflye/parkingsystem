@@ -130,4 +130,17 @@ public class ParkingDataBaseIT {
 	        	System.setOut(originalOut);
 	        }
 	}
+	
+	@Test
+	public void notWelcomeBack() {
+		ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
+       	final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+       	final PrintStream originalOut = System.out;
+	    System.setOut(new PrintStream(outContent));
+	    parkingService.processIncomingVehicle();
+	    String welcomeMessage = outContent.toString();
+	    assert(!welcomeMessage.contains("Welcome back!"));
+	    System.setOut(originalOut);
+	        
+	}
 }
