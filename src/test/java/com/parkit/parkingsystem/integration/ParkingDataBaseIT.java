@@ -1,6 +1,5 @@
 package com.parkit.parkingsystem.integration;
 
-import com.parkit.parkingsystem.constants.Fare;
 import com.parkit.parkingsystem.constants.ParkingType;
 import com.parkit.parkingsystem.dao.ParkingSpotDAO;
 import com.parkit.parkingsystem.dao.TicketDAO;
@@ -94,7 +93,6 @@ public class ParkingDataBaseIT {
         testParkingACar();
         ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
         parkingService.processExitingVehicle();
-        //TODO: check that the fare generated and out time are populated correctly in the database
         Ticket ticket = ticketDAO.getTicket("ABCDEF");
         double priceFromDB = ticket.getPrice();
         FareCalculatorService fareCalculatorService = new FareCalculatorService();
@@ -182,11 +180,10 @@ public class ParkingDataBaseIT {
 		        }
 		        else
 		        {
-		        	Ticket ticket = ticketDAO.getTicket("ABCDEF");
-		            double priceFromDB = ticket.getPrice();
-		            FareCalculatorService fareCalculatorService = new FareCalculatorService();
-		            fareCalculatorService.calculateFare(ticket);
-		            assert(((int)(ticket.getPrice()*100) == (int) (priceFromDB*100)) && ((int) (priceFromDB * 100) == (int)(0.95 * Fare.CAR_RATE_PER_HOUR  )));
+		        	Ticket ticket2 = ticketDAO.getTicket("ABCDEF");
+		            double priceFromDB = ticket2.getPrice();
+		            double duration =((double)(ticket2.getOutTime().getTime() - ticket2.getInTime().getTime()))/3600000;
+		            assert((((int) (priceFromDB * 100.) == (int)((0.95 * duration * 1.5) * 100.  ))));
 		        }
 	        }
 	}
