@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 
 @ExtendWith(MockitoExtension.class)
@@ -122,9 +123,18 @@ public class ParkingDataBaseIT {
 	        {
 	        	final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
 	        	final PrintStream originalOut = System.out;
-	        	System.setOut(new PrintStream(outContent));
+	        	try {
+					System.setOut(new PrintStream(outContent, false, "UTF-8"));
+				} catch (UnsupportedEncodingException e1) {
+					e1.printStackTrace();
+				}
 	        	parkingService.processIncomingVehicle();
-	        	String welcomeMessage = outContent.toString();
+	        	String welcomeMessage = "";
+				try {
+					welcomeMessage = outContent.toString("UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					e.printStackTrace();
+				}
 	        	assert(welcomeMessage.contains("Welcome back! As a recurring user of our parking lot, you'll benefit from a 5% discount."));
 	        	System.setOut(originalOut);
 	        }
@@ -135,16 +145,25 @@ public class ParkingDataBaseIT {
 		ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
        	final ByteArrayOutputStream outContent = new ByteArrayOutputStream();
        	final PrintStream originalOut = System.out;
-	    System.setOut(new PrintStream(outContent));
+	    try {
+			System.setOut(new PrintStream(outContent, false, "UTF-8"));
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
 	    parkingService.processIncomingVehicle();
-	    String welcomeMessage = outContent.toString();
+	    String welcomeMessage = "";
+		try {
+			welcomeMessage = outContent.toString("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 	    assert(!welcomeMessage.contains("Welcome back! As a recurring user of our parking lot, you'll benefit from a 5% discount."));
 	    System.setOut(originalOut);
 	        
 	}
 	
 	@Test
-	public void checkThe5percecentReduceForFidelity() {
+	public void checkThe5percecentDiscountForFidelity() {
 		 ParkingService parkingService = new ParkingService(inputReaderUtil, parkingSpotDAO, ticketDAO);
 	        parkingService.processIncomingVehicle();
 	        // check if a ticket that is saved in DB and Parking table is updated with availability
